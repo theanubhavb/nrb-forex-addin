@@ -6,13 +6,12 @@
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="NRB Forex Functions"/>
   <Description DefaultValue="Custom functions for retrieving Nepal Rastra Bank forex rates."/>
-  <IconUrl DefaultValue="https://localhost:3000/assets/icon-32.png"/>
-  <HighResolutionIconUrl DefaultValue="https://localhost:3000/assets/icon-64.png"/>
+  <IconUrl DefaultValue="https://theanubhavb.github.io/nrb-forex-addin/assets/icon-32.png"/>
+  <HighResolutionIconUrl DefaultValue="https://theanubhavb.github.io/nrb-forex-addin/assets/icon-64.png"/>
   <SupportUrl DefaultValue="https://www.contoso.com/help"/>
   <AppDomains>
-    <AppDomain>https://www.contoso.com</AppDomain>
-    <AppDomain>https://localhost</AppDomain>
-    <AppDomain>https://www.nrb.org.np</AppDomain>
+    <AppDomain>www.contoso.com</AppDomain>
+    <AppDomain>www.nrb.org.np</AppDomain>
   </AppDomains>
   <Hosts>
     <Host Name="Workbook"/>
@@ -23,7 +22,7 @@
     </Sets>
   </Requirements>
   <DefaultSettings>
-    <SourceLocation DefaultValue="https://localhost:3000/taskpane.html"/>
+    <SourceLocation DefaultValue="https://theanubhavb.github.io/nrb-forex-addin/taskpane.html"/>
   </DefaultSettings>
   <Permissions>ReadWriteDocument</Permissions>
   <VersionOverrides xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="VersionOverridesV1_0">
@@ -86,15 +85,15 @@
     </Hosts>
     <Resources>
       <bt:Images>
-        <bt:Image id="Icon.16x16" DefaultValue="https://localhost:3000/assets/icon-16.png"/>
-        <bt:Image id="Icon.32x32" DefaultValue="https://localhost:3000/assets/icon-32.png"/>
-        <bt:Image id="Icon.80x80" DefaultValue="https://localhost:3000/assets/icon-80.png"/>
+        <bt:Image id="Icon.16x16" DefaultValue="https://theanubhavb.github.io/nrb-forex-addin/assets/icon-16.png"/>
+        <bt:Image id="Icon.32x32" DefaultValue="https://theanubhavb.github.io/nrb-forex-addin/assets/icon-32.png"/>
+        <bt:Image id="Icon.80x80" DefaultValue="https://theanubhavb.github.io/nrb-forex-addin/assets/icon-80.png"/>
       </bt:Images>
       <bt:Urls>
-                <bt:Url id="Functions.Script.Url" DefaultValue="https://localhost:3000/functions.js"/>
-                <bt:Url id="Functions.Metadata.Url" DefaultValue="https://localhost:3000/functions.json"/>
+                <bt:Url id="Functions.Script.Url" DefaultValue="https://theanubhavb.github.io/nrb-forex-addin/dist/functions.js"/>
+                <bt:Url id="Functions.Metadata.Url" DefaultValue="https://theanubhavb.github.io/nrb-forex-addin/dist/functions.json"/>
         <bt:Url id="GetStarted.LearnMoreUrl" DefaultValue="https://go.microsoft.com/fwlink/?LinkId=276812"/>
-        <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/taskpane.html"/>
+        <bt:Url id="Taskpane.Url" DefaultValue="https://theanubhavb.github.io/nrb-forex-addin/dist/taskpane.html"/>
       </bt:Urls>
       <bt:ShortStrings>
                 <bt:String id="Functions.Namespace" DefaultValue="NRB"/>
