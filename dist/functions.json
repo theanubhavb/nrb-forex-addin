@@ -1,0 +1,60 @@
+{
+    "allowCustomDataForDataTypeAny": true,
+    "functions": [
+        {
+            "description": "Test NRB API Connection",
+            "id": "TESTCONNECTION",
+            "name": "TESTCONNECTION",
+            "parameters": [],
+            "result": {
+                "type": "string"
+            }
+        },
+        {
+            "description": "Get NRB Forex Rate (smart single/range return)",
+            "id": "FOREXRATE",
+            "name": "FOREXRATE",
+            "parameters": [
+                {
+                    "description": "Start date",
+                    "name": "fromDate",
+                    "type": "any"
+                },
+                {
+                    "description": "End date (optional)",
+                    "name": "toDate",
+                    "optional": true,
+                    "type": "any"
+                },
+                {
+                    "description": "Currency pair (default: USDNPR)",
+                    "name": "currencyPair",
+                    "optional": true,
+                    "type": "string"
+                },
+                {
+                    "description": "B for Buy, S for Sell (default: S)",
+                    "name": "rateType",
+                    "optional": true,
+                    "type": "string"
+                }
+            ],
+            "result": {}
+        },
+        {
+            "description": "Helper function to parse JSON string back into table",
+            "id": "PARSEJSON",
+            "name": "PARSEJSON",
+            "parameters": [
+                {
+                    "description": "JSON string returned by NRB.FOREXRATE",
+                    "name": "jsonString",
+                    "type": "string"
+                }
+            ],
+            "result": {
+                "dimensionality": "matrix"
+            }
+        }
+    ]
+}
