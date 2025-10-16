@@ -19,19 +19,16 @@ export async function TestConnection(): Promise<string> {
         if (response.ok) {
             const jsonResponse = await response.json();
 
-            // FIX: correctly extract nested status.code if present
             const status = jsonResponse.status?.code ?? jsonResponse.status;
 
             if (status === 200 || status === 1) {
                 return "SUCCESS: NRB API is reachable and responded with status 200/1.";
             }
 
-            // Otherwise include debug details
             const debugDetail = JSON.stringify(jsonResponse, null, 2);
             return `API WARNING: HTTP OK but unexpected status (${status}). Response snippet:\n${debugDetail.substring(0, 500)}...`;
         }
 
-        // HTTP errors
         return `NETWORK ERROR: HTTP Status ${response.status} - ${response.statusText}`;
 
     } catch (e) {
@@ -94,7 +91,6 @@ export async function ForexRate(
             const results = extractRatesFromPayload(payload, targetCurrency, rateType, needsInversion);
             if (results.length === 0) return `#ERROR: Currency ${currencyPair} not found`;
 
-            // Return as JSON string for parsing by NRB.PARSEJSON()
             return JSON.stringify([["Date", "Rate"], ...results]);
         }
 
@@ -114,11 +110,9 @@ export async function ForexRate(
                         const finalRate = results[0][1];
 
                         if (searchDateStr === requestedFromStr) {
-                            // Direct match: return positive number
                             return finalRate;
                         } else {
-                            // FALLBACK: return negative number
-                            return finalRate * -1; // <-- The requested change
+                            return finalRate * -1;
                         }
                     }
                 }
@@ -166,27 +160,18 @@ function formatDate(inputDate: any): string {
 
         let dateObj: Date;
 
-        // 1️⃣ Already a Date object
         if (inputDate instanceof Date) {
             dateObj = inputDate;
-        }
-
-        // 2️⃣ Excel serial number (e.g., 45825)
-        else if (typeof inputDate === 'number') {
+        } else if (typeof inputDate === 'number') {
             const MS_PER_DAY = 24 * 60 * 60 * 1000;
             const excelEpoch = new Date(Date.UTC(1899, 11, 30));
             dateObj = new Date(excelEpoch.getTime() + inputDate * MS_PER_DAY);
-        }
-
-        // 3️⃣ String input (handle many formats)
-        else if (typeof inputDate === 'string') {
+        } else if (typeof inputDate === 'string') {
             const trimmed = inputDate.trim();
             if (trimmed === "") return "ERROR";
 
-            // Normalize multiple spaces or mixed separators
             let str = trimmed.replace(/[\s]+/g, ' ').replace(/[.]/g, '-').replace(/[\/]/g, '-');
 
-            // Handle DD-MMM-YYYY or YYYY-MMM-DD (e.g., 15-Oct-2025)
             const monthNames = {
                 jan: "01", feb: "02", mar: "03", apr: "04", may: "05", jun: "06",
                 jul: "07", aug: "08", sep: "09", oct: "10", nov: "11", dec: "12"
@@ -205,36 +190,24 @@ function formatDate(inputDate: any): string {
                 str = mapped.join("-");
             }
 
-            // Try YYYY-MM-DD
             let isoMatch = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
             if (isoMatch) {
                 const [_, y, m, d] = isoMatch;
                 dateObj = new Date(`${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`);
-            }
-
-            // Try DD-MM-YYYY
-            else if (/^(\d{1,2})-(\d{1,2})-(\d{4})$/.test(str)) {
+            } else if (/^(\d{1,2})-(\d{1,2})-(\d{4})$/.test(str)) {
                 const [_, d, m, y] = str.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/)!;
                 dateObj = new Date(`${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`);
-            }
-
-            // Fallback: Let JS try parsing (covers most locale formats)
-            else {
+            } else {
                 dateObj = new Date(str);
             }
-        }
-
-        // 4️⃣ Unsupported type
-        else {
+        } else {
             return "ERROR";
         }
 
-        // 5️⃣ Validate
         if (isNaN(dateObj.getTime())) {
             return "ERROR";
         }
 
-        // 6️⃣ Output normalized to YYYY-MM-DD
         const year = dateObj.getUTCFullYear();
         const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
         const day = String(dateObj.getUTCDate()).padStart(2, '0');
@@ -244,7 +217,6 @@ function formatDate(inputDate: any): string {
         return "ERROR";
     }
 }
-
 
 /**
  * Helper to extract rate from the payload array
@@ -272,13 +244,11 @@ function extractRatesFromPayload(
 
                 if (rateValue === null || rateValue === undefined || rateValue === "") continue;
 
-                // Parse rate (remove commas if present)
                 const rateStr = String(rateValue).replace(/,/g, '');
                 const rateParsed = parseFloat(rateStr);
 
                 if (isNaN(rateParsed) || rateParsed <= 0) continue;
 
-                // Apply inversion if needed
                 const finalRate = needsInversion ? (1 / rateParsed) : rateParsed;
                 
                 results.push([dateStr, finalRate]);
@@ -294,5 +264,7 @@ function extractRatesFromPayload(
 // =====================================================================================
 
 if (typeof CustomFunctions !== "undefined") {
-    CustomFunctions.associate("NRB.FOREXRATE", ForexRate); 
+    CustomFunctions.associate("NRB.FOREXRATE", ForexRate);
+    CustomFunctions.associate("NRB.TESTCONNECTION", TestConnection);
+    CustomFunctions.associate("NRB.PARSEJSON", ParseJSON);
 }
