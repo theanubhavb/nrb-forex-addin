@@ -4,7 +4,7 @@
         {
             "description": "Test NRB API Connection",
             "id": "NRB.TestConnection",
-            "name": "TESTCONNECTION",
+            "name": "TestConnection",
             "namespace": "NRB",
             "parameters": [],
             "result": {
@@ -15,7 +15,7 @@
         {
             "description": "Get NRB Forex Rate (smart single/range return)",
             "id": "NRB.ForexRate",
-            "name": "FOREXRATE",
+            "name": "ForexRate",
             "namespace": "NRB",
             "parameters": [
                 {
@@ -48,7 +48,7 @@
         {
             "description": "Helper function to parse JSON string back into table",
             "id": "NRB.ParseJSON",
-            "name": "PARSEJSON",
+            "name": "ParseJSON",
             "namespace": "NRB",
             "parameters": [
                 {
