@@ -5,6 +5,7 @@
 /**
  * Test NRB API Connection
  * @customfunction
+ * @volatile false
  * @returns {Promise<string>} Connection status
  * @alias NRB.TESTCONNECTION
  */
@@ -40,6 +41,7 @@ export async function TestConnection(): Promise<string> {
 /**
  * Get NRB Forex Rate (smart single/range return)
  * @customfunction
+ * @volatile false
  * @param {any} fromDate Start date
  * @param {any} [toDate] End date (optional)
  * @param {string} [currencyPair="USDNPR"] Currency pair (default: USDNPR)
@@ -51,7 +53,8 @@ export async function ForexRate(
     fromDate: any,
     toDate?: any,
     currencyPair: string = "USDNPR",
-    rateType: string = "S"
+    rateType: string = "S",
+    trigger?: number // to force recalculation
 ): Promise<string | number> {
     try {
         if (!fromDate) return "#ERROR: From Date is required";
@@ -130,6 +133,7 @@ export async function ForexRate(
 /**
  * Helper function to parse JSON string back into table
  * @customfunction
+ * @volatile false
  * @param {string} jsonString JSON string returned by NRB.FOREXRATE
  * @returns {any[][]} Parsed table for Excel
  * @alias NRB.PARSEJSON
