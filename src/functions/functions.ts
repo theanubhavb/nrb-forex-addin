@@ -264,9 +264,20 @@ function extractRatesFromPayload(
 Office.onReady(() => {
     if (typeof CustomFunctions !== "undefined") {
         try {
-            CustomFunctions.associate("TESTCONNECTION", TestConnection);
-            CustomFunctions.associate("FOREXRATE", ForexRate);
-            CustomFunctions.associate("PARSEJSON", ParseJSON);
+            CustomFunctions.associate("NRB.TESTCONNECTION", TestConnection);
+            CustomFunctions.associate("NRB.FOREXRATE", ForexRate);
+            CustomFunctions.associate("NRB.PARSEJSON", ParseJSON);
         } catch {}
     }
 });
+
+// =====================================================================================
+// MAC: Prevent Auto-Recalculation on Cell Changes
+// =====================================================================================
+
+if (typeof self !== "undefined") {
+    (self as any).__customFunctionsMetadata = {
+        allowCustomDataForDataTypeAny: true,
+        allowErrorForDataTypeAny: true
+    };
+}
