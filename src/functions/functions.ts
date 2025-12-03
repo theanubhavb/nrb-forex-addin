@@ -54,7 +54,6 @@ export async function ForexRate(
     toDate?: any,
     currencyPair: string = "USDNPR",
     rateType: string = "S",
-    trigger?: number // to force recalculation
 ): Promise<string | number> {
     try {
         if (!fromDate) return "#ERROR: From Date is required";

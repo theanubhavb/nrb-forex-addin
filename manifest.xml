@@ -28,7 +28,7 @@
     <Hosts>
       <Host xsi:type="Workbook">
         <Runtimes>
-          <Runtime resid="Taskpane.Url" lifetime="long"/>
+          <Runtime resid="Taskpane.Url" lifetime="short"/>
         </Runtimes>
         <AllFormFactors>
           <ExtensionPoint xsi:type="CustomFunctions">
