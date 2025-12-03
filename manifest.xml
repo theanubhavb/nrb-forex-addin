@@ -62,7 +62,7 @@
                   <bt:Image size="32" resid="Icon.32x32"/>
                   <bt:Image size="80" resid="Icon.80x80"/>
                 </Icon>
-                <Control xsi:type="Button" id="TaskpaneButton">
+                <!-- <Control xsi:type="Button" id="TaskpaneButton">
                   <Label resid="TaskpaneButton.Label"/>
                   <Supertip>
                     <Title resid="TaskpaneButton.Label"/>
@@ -77,7 +77,7 @@
                     <TaskpaneId>ButtonId1</TaskpaneId>
                     <SourceLocation resid="Taskpane.Url"/>
                   </Action>
-                </Control>
+                </Control>-->
               </Group>
             </OfficeTab>
           </ExtensionPoint>
