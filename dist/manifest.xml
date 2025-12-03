@@ -43,6 +43,7 @@
             <LearnMoreUrl resid="GetStarted.LearnMoreUrl"/>
           </GetStarted>
           <FunctionFile resid="Functions.Script.Url"/>
+          <!--
           <ExtensionPoint xsi:type="PrimaryCommandSurface">
             <OfficeTab id="TabHome">
               <Group id="CommandsGroup">
@@ -70,7 +71,7 @@
                 </Control>
               </Group>
             </OfficeTab>
-          </ExtensionPoint>
+          </ExtensionPoint> -->
         </DesktopFormFactor>
       </Host>
     </Hosts>
