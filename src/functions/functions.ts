@@ -30,7 +30,7 @@ if (typeof Office !== "undefined") {
 /**
  * Test NRB API connection.
  * @customfunction
- * @volatile false
+ * @volatile true
  * @returns {Promise<string>}
  * @alias NRB.TESTCONNECTION
  */
@@ -53,7 +53,7 @@ export async function TestConnection(): Promise<string> {
 /**
  * Get NRB Forex rate (single date or range).
  * @customfunction
- * @volatile false
+ * @volatile true
  * @param {any} fromDate
  * @param {any} [toDate]
  * @param {string} [currencyPair="USDNPR"]
@@ -132,7 +132,7 @@ export async function ForexRate(
 /**
  * Parse JSON string returned by ForexRate to Excel table
  * @customfunction
- * @volatile false
+ * @volatile true
  * @param {string} jsonString
  * @returns {any[][]}
  * @alias NRB.PARSEJSON
