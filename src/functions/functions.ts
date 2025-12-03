@@ -1,35 +1,34 @@
 ﻿// =====================================================================================
+// GLOBAL CACHE (MAC + WINDOWS SAFE)
+// Prevents auto-recalculation unless input parameters change
+// =====================================================================================
+
+const cache: Record<string, any> = {};
+
+
+// =====================================================================================
 // OPTIONAL: WINDOWS-ONLY CALCULATION CONTROL (SAFE FOR MAC)
 // =====================================================================================
-// This code does NOT run inside the Custom Functions runtime.
-// It runs ONLY when loaded in taskpane/commands, not in Mac CF runtime.
 
 if (typeof Office !== "undefined") {
   Office.onReady((info) => {
     try {
       if (info.platform === Office.PlatformType.PC) {
-        // Attempt Windows-only calculation control
         Excel.run(async (context) => {
           try {
             context.application.calculationMode = Excel.CalculationMode.manual;
             await context.sync();
-          } catch {
-            // Ignore errors silently
-          }
+          } catch { }
         });
       }
-    } catch {
-      // Ignore platform detection errors
-    }
+    } catch { }
   });
 }
 
+
 // =====================================================================================
-// CUSTOM FUNCTIONS RUNTIME STARTS HERE (MAC-SAFE)
+// CUSTOM FUNCTIONS RUNTIME STARTS HERE (MAC SAFE)
 // =====================================================================================
-// No Excel.run()
-// No application-level API calls
-// Only pure JS + fetch + JSON
 
 
 // =====================================================================================
@@ -44,33 +43,32 @@ if (typeof Office !== "undefined") {
  * @alias NRB.TESTCONNECTION
  */
 export async function TestConnection(): Promise<string> {
-    const testUrl = `https://www.nrb.org.np/api/forex/v1/rates?from=2024-01-01&to=2024-01-01&page=1&per_page=1`;
+    const url = `https://www.nrb.org.np/api/forex/v1/rates?from=2024-01-01&to=2024-01-01&page=1&per_page=1`;
 
     try {
-        const response = await fetch(testUrl);
+        const response = await fetch(url);
 
         if (response.ok) {
             const jsonResponse = await response.json();
             const status = jsonResponse.status?.code ?? jsonResponse.status;
 
             if (status === 200 || status === 1) {
-                return "SUCCESS: NRB API is reachable and responded with status 200/1.";
+                return "SUCCESS: NRB API is reachable.";
             }
 
-            const snippet = JSON.stringify(jsonResponse).substring(0, 500);
-            return `API WARNING: HTTP OK but unexpected status (${status}). Snippet:\n${snippet}...`;
+            return `WARNING: Unexpected NRB API status (${status}).`;
         }
 
-        return `NETWORK ERROR: HTTP ${response.status} - ${response.statusText}`;
+        return `NETWORK ERROR: HTTP ${response.status}`;
 
     } catch (e) {
-        return `ERROR: Could not complete request. (${e instanceof Error ? e.message : String(e)})`;
+        return `ERROR: ${e instanceof Error ? e.message : String(e)}`;
     }
 }
 
 
 /**
- * Get NRB Forex Rate (single date or date range)
+ * Get NRB Forex Rate (single date or date range) with MAC-SAFE CACHE
  * @customfunction
  * @volatile false
  * @param {any} fromDate
@@ -87,6 +85,26 @@ export async function ForexRate(
     rateType: string = "S",
 ): Promise<string | number> {
     try {
+        // ==========================================================
+        // BUILD CACHE KEY
+        // ==========================================================
+        const cacheKey = JSON.stringify({
+            fromDate,
+            toDate,
+            currencyPair,
+            rateType
+        });
+
+        // ==========================================================
+        // RETURN CACHED RESULT IF AVAILABLE
+        // ==========================================================
+        if (cache[cacheKey] !== undefined) {
+            return cache[cacheKey];
+        }
+
+        // ==========================================================
+        // ORIGINAL VALIDATION
+        // ==========================================================
         if (!fromDate) return "#ERROR: From Date is required";
 
         const fromStr = formatDate(fromDate);
@@ -110,7 +128,10 @@ export async function ForexRate(
         rateType = String(rateType || "S").trim().toUpperCase();
         if (!["B", "S"].includes(rateType)) return "#ERROR: Rate type must be 'B' or 'S'";
 
-        // RANGE CASE
+
+        // ==========================================================
+        // RANGE MODE
+        // ==========================================================
         if (isRange) {
             const url = `https://www.nrb.org.np/api/forex/v1/rates?from=${fromStr}&to=${toStr}&page=1&per_page=100`;
             const response = await fetch(url);
@@ -125,11 +146,18 @@ export async function ForexRate(
             const results = extractRatesFromPayload(payload, targetCurrency, rateType, needsInversion);
             if (results.length === 0) return `#ERROR: Currency ${currencyPair} not found`;
 
-            return JSON.stringify([["Date", "Rate"], ...results]);
+            const final = JSON.stringify([["Date", "Rate"], ...results]);
+
+            cache[cacheKey] = final;
+            return final;
         }
 
-        // SINGLE DATE WITH 7-DAY BACKOFF
+
+        // ==========================================================
+        // SINGLE DATE WITH BACKOFF UP TO 7 DAYS
+        // ==========================================================
         let cur = new Date(fromStr);
+
         for (let i = 0; i < 7; i++) {
             const dtStr = formatDate(cur);
             const url = `https://www.nrb.org.np/api/forex/v1/rates?from=${dtStr}&to=${dtStr}&page=1&per_page=1`;
@@ -144,7 +172,10 @@ export async function ForexRate(
 
                     if (results.length > 0) {
                         const finalRate = results[0][1];
-                        return dtStr === fromStr ? finalRate : finalRate * -1;
+                        const final = dtStr === fromStr ? finalRate : finalRate * -1;
+
+                        cache[cacheKey] = final;
+                        return final;
                     }
                 }
             }
@@ -152,7 +183,7 @@ export async function ForexRate(
             cur.setDate(cur.getDate() - 1);
         }
 
-        return `#ERROR: No rate found for ${currencyPair} on ${fromStr} or 7 preceding days`;
+        return `#ERROR: No rate found for ${currencyPair} on ${fromStr} or previous 7 days`;
 
     } catch (err) {
         return `#ERROR: ${err instanceof Error ? err.message : String(err)}`;
@@ -161,7 +192,7 @@ export async function ForexRate(
 
 
 /**
- * Convert NRB.FOREXRATE JSON string back to Excel table
+ * Convert NRB.FOREXRATE JSON string to Excel Table
  * @customfunction
  * @volatile false
  * @param {string} jsonString
@@ -191,20 +222,20 @@ function formatDate(input: any): string {
 
         if (input instanceof Date) {
             d = input;
+
         } else if (typeof input === "number") {
             const epoch = new Date(Date.UTC(1899, 11, 30));
             d = new Date(epoch.getTime() + input * 86400000);
+
         } else if (typeof input === "string") {
             let s = input.trim().replace(/[.\/]/g, "-");
+
             const monthMap: any = {
                 jan: "01", feb: "02", mar: "03", apr: "04", may: "05", jun: "06",
                 jul: "07", aug: "08", sep: "09", oct: "10", nov: "11", dec: "12"
             };
 
-            const words = s.split(/[-\s]/).map(x => {
-                const m = monthMap[x.toLowerCase()];
-                return m ? m : x;
-            });
+            const words = s.split(/[-\s]/).map(x => monthMap[x.toLowerCase()] ?? x);
             s = words.join("-");
 
             if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(s)) {
@@ -216,6 +247,7 @@ function formatDate(input: any): string {
             } else {
                 d = new Date(s);
             }
+
         } else {
             return "ERROR";
         }
@@ -267,12 +299,13 @@ Office.onReady(() => {
             CustomFunctions.associate("NRB.TESTCONNECTION", TestConnection);
             CustomFunctions.associate("NRB.FOREXRATE", ForexRate);
             CustomFunctions.associate("NRB.PARSEJSON", ParseJSON);
-        } catch {}
+        } catch { }
     }
 });
 
+
 // =====================================================================================
-// MAC: Prevent Auto-Recalculation on Cell Changes
+// MAC METADATA SETTINGS
 // =====================================================================================
 
 if (typeof self !== "undefined") {

@@ -14,7 +14,7 @@
             }
         },
         {
-            "description": "Get NRB Forex Rate (single date or date range)",
+            "description": "Get NRB Forex Rate (single date or date range) with MAC-SAFE CACHE",
             "id": "FOREXRATE",
             "name": "FOREXRATE",
             "options": {
@@ -44,7 +44,7 @@
             "result": {}
         },
         {
-            "description": "Convert NRB.FOREXRATE JSON string back to Excel table",
+            "description": "Convert NRB.FOREXRATE JSON string to Excel Table",
             "id": "PARSEJSON",
             "name": "PARSEJSON",
             "options": {
