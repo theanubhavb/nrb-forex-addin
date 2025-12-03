@@ -294,8 +294,17 @@ function extractRatesFromPayload(
 // Custom Function Association
 // =====================================================================================
 
-if (typeof CustomFunctions !== "undefined") {
-    CustomFunctions.associate("NRB.FOREXRATE", ForexRate);
-    CustomFunctions.associate("NRB.TESTCONNECTION", TestConnection);
-    CustomFunctions.associate("NRB.PARSEJSON", ParseJSON);
-}
+Office.onReady((info) => {
+    console.log("Office is ready, host:", info.host);
+    
+    if (typeof CustomFunctions !== "undefined") {
+        try {
+            CustomFunctions.associate("TESTCONNECTION", TestConnection);
+            CustomFunctions.associate("FOREXRATE", ForexRate);
+            CustomFunctions.associate("PARSEJSON", ParseJSON);
+            console.log("Custom functions registered successfully");
+        } catch (error) {
+            console.error("Error registering custom functions:", error);
+        }
+    }
+});
