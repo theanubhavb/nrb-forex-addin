@@ -1,4 +1,32 @@
 ﻿// =====================================================================================
+// Excel Desktop Calculation Control - Prevents Flickering
+// =====================================================================================
+
+let calculationControlInitialized = false;
+
+if (typeof Office !== "undefined") {
+  Office.onReady(() => {
+    if (!calculationControlInitialized && typeof Excel !== "undefined") {
+      calculationControlInitialized = true;
+      
+      // Disable automatic calculation mode for Desktop
+      try {
+        Excel.run(async (context) => {
+          const app = context.application;
+          app.calculationMode = Excel.CalculationMode.manual;
+          await context.sync();
+        }).catch(() => {
+          // Silently ignore if not available
+        });
+      } catch (e) {
+        // Ignore errors
+      }
+    }
+  });
+}
+
+
+// =====================================================================================
 // Custom Function Namespace: NRB
 // =====================================================================================
 
