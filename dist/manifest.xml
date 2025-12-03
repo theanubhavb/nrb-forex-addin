@@ -15,11 +15,6 @@
   <Hosts>
     <Host Name="Workbook"/>
   </Hosts>
-  <Requirements>
-    <Sets DefaultMinVersion="1.1">
-      <Set Name="SharedRuntime" MinVersion="1.1"/>
-    </Sets>
-  </Requirements>
   <DefaultSettings>
     <SourceLocation DefaultValue="https://theanubhavb.github.io/nrb-forex-addin/dist/taskpane.html"/>
   </DefaultSettings>
@@ -27,9 +22,6 @@
   <VersionOverrides xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="VersionOverridesV1_0">
     <Hosts>
       <Host xsi:type="Workbook">
-        <Runtimes>
-          <Runtime resid="Taskpane.Url" lifetime="long"/>
-        </Runtimes>
         <AllFormFactors>
           <ExtensionPoint xsi:type="CustomFunctions">
             <Script>
