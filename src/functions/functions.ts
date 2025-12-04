@@ -1,36 +1,35 @@
 ﻿// =====================================================================================
-// OPTIONAL: WINDOWS-ONLY CALCULATION CONTROL (SAFE FOR MAC)
+// PARAMETER CHANGE DETECTION (Smart Recalculation)
 // =====================================================================================
-// This code does NOT run inside the Custom Functions runtime.
-// It runs ONLY when loaded in taskpane/commands, not in Mac CF runtime.
+// This tracks if actual parameters changed, not just any cell in the workbook
 
-if (typeof Office !== "undefined") {
-  Office.onReady((info) => {
-    try {
-      if (info.platform === Office.PlatformType.PC) {
-        // Attempt Windows-only calculation control
-        Excel.run(async (context) => {
-          try {
-            context.application.calculationMode = Excel.CalculationMode.manual;
-            await context.sync();
-          } catch {
-            // Ignore errors silently
-          }
-        });
-      }
-    } catch {
-      // Ignore platform detection errors
-    }
-  });
+interface CallSignature {
+    params: string;
+    result: any;
 }
 
-// =====================================================================================
-// CUSTOM FUNCTIONS RUNTIME STARTS HERE (MAC-SAFE)
-// =====================================================================================
-// No Excel.run()
-// No application-level API calls
-// Only pure JS + fetch + JSON
+const lastCallCache = new Map<string, CallSignature>();
 
+function shouldRecalculate(funcName: string, ...params: any[]): { shouldCalc: boolean; cachedResult?: any } {
+    const key = `${funcName}`;
+    const paramString = JSON.stringify(params);
+    
+    const lastCall = lastCallCache.get(key);
+    
+    if (!lastCall || lastCall.params !== paramString) {
+        // Parameters changed or first call - need to recalculate
+        return { shouldCalc: true };
+    }
+    
+    // Parameters unchanged - return cached result
+    return { shouldCalc: false, cachedResult: lastCall.result };
+}
+
+function saveCallResult(funcName: string, result: any, ...params: any[]): void {
+    const key = `${funcName}`;
+    const paramString = JSON.stringify(params);
+    lastCallCache.set(key, { params: paramString, result });
+}
 
 // =====================================================================================
 // Custom Function Namespace: NRB
@@ -39,11 +38,13 @@ if (typeof Office !== "undefined") {
 /**
  * Test NRB API Connection
  * @customfunction
- * @volatile false
  * @returns {Promise<string>}
  * @alias NRB.TESTCONNECTION
  */
 export async function TestConnection(): Promise<string> {
+    const check = shouldRecalculate("TESTCONNECTION");
+    if (!check.shouldCalc) return check.cachedResult;
+
     const testUrl = `https://www.nrb.org.np/api/forex/v1/rates?from=2024-01-01&to=2024-01-01&page=1&per_page=1`;
 
     try {
@@ -54,17 +55,25 @@ export async function TestConnection(): Promise<string> {
             const status = jsonResponse.status?.code ?? jsonResponse.status;
 
             if (status === 200 || status === 1) {
-                return "SUCCESS: NRB API is reachable and responded with status 200/1.";
+                const result = "SUCCESS: NRB API is reachable and responded with status 200/1.";
+                saveCallResult("TESTCONNECTION", result);
+                return result;
             }
 
             const snippet = JSON.stringify(jsonResponse).substring(0, 500);
-            return `API WARNING: HTTP OK but unexpected status (${status}). Snippet:\n${snippet}...`;
+            const result = `API WARNING: HTTP OK but unexpected status (${status}). Snippet:\n${snippet}...`;
+            saveCallResult("TESTCONNECTION", result);
+            return result;
         }
 
-        return `NETWORK ERROR: HTTP ${response.status} - ${response.statusText}`;
+        const result = `NETWORK ERROR: HTTP ${response.status} - ${response.statusText}`;
+        saveCallResult("TESTCONNECTION", result);
+        return result;
 
     } catch (e) {
-        return `ERROR: Could not complete request. (${e instanceof Error ? e.message : String(e)})`;
+        const result = `ERROR: Could not complete request. (${e instanceof Error ? e.message : String(e)})`;
+        saveCallResult("TESTCONNECTION", result);
+        return result;
     }
 }
 
@@ -72,7 +81,6 @@ export async function TestConnection(): Promise<string> {
 /**
  * Get NRB Forex Rate (single date or date range)
  * @customfunction
- * @volatile false
  * @param {any} fromDate
  * @param {any} [toDate]
  * @param {string} [currencyPair="USDNPR"]
@@ -86,6 +94,10 @@ export async function ForexRate(
     currencyPair: string = "USDNPR",
     rateType: string = "S",
 ): Promise<string | number> {
+    // Check if parameters actually changed
+    const check = shouldRecalculate("FOREXRATE", fromDate, toDate, currencyPair, rateType);
+    if (!check.shouldCalc) return check.cachedResult;
+
     try {
         if (!fromDate) return "#ERROR: From Date is required";
 
@@ -125,7 +137,9 @@ export async function ForexRate(
             const results = extractRatesFromPayload(payload, targetCurrency, rateType, needsInversion);
             if (results.length === 0) return `#ERROR: Currency ${currencyPair} not found`;
 
-            return JSON.stringify([["Date", "Rate"], ...results]);
+            const result = JSON.stringify([["Date", "Rate"], ...results]);
+            saveCallResult("FOREXRATE", result, fromDate, toDate, currencyPair, rateType);
+            return result;
         }
 
         // SINGLE DATE WITH 7-DAY BACKOFF
@@ -144,7 +158,9 @@ export async function ForexRate(
 
                     if (results.length > 0) {
                         const finalRate = results[0][1];
-                        return dtStr === fromStr ? finalRate : finalRate * -1;
+                        const result = dtStr === fromStr ? finalRate : finalRate * -1;
+                        saveCallResult("FOREXRATE", result, fromDate, toDate, currencyPair, rateType);
+                        return result;
                     }
                 }
             }
@@ -152,10 +168,14 @@ export async function ForexRate(
             cur.setDate(cur.getDate() - 1);
         }
 
-        return `#ERROR: No rate found for ${currencyPair} on ${fromStr} or 7 preceding days`;
+        const result = `#ERROR: No rate found for ${currencyPair} on ${fromStr} or 7 preceding days`;
+        saveCallResult("FOREXRATE", result, fromDate, toDate, currencyPair, rateType);
+        return result;
 
     } catch (err) {
-        return `#ERROR: ${err instanceof Error ? err.message : String(err)}`;
+        const result = `#ERROR: ${err instanceof Error ? err.message : String(err)}`;
+        saveCallResult("FOREXRATE", result, fromDate, toDate, currencyPair, rateType);
+        return result;
     }
 }
 
@@ -163,24 +183,33 @@ export async function ForexRate(
 /**
  * Convert NRB.FOREXRATE JSON string back to Excel table
  * @customfunction
- * @volatile false
  * @param {string} jsonString
  * @returns {any[][]}
  * @alias NRB.PARSEJSON
  */
 export function ParseJSON(jsonString: string): any[][] {
+    const check = shouldRecalculate("PARSEJSON", jsonString);
+    if (!check.shouldCalc) return check.cachedResult;
+
     try {
         const parsed = JSON.parse(jsonString);
-        if (Array.isArray(parsed) && Array.isArray(parsed[0])) return parsed;
-        return [["#ERROR: Invalid JSON structure"]];
+        if (Array.isArray(parsed) && Array.isArray(parsed[0])) {
+            saveCallResult("PARSEJSON", parsed, jsonString);
+            return parsed;
+        }
+        const result = [["#ERROR: Invalid JSON structure"]];
+        saveCallResult("PARSEJSON", result, jsonString);
+        return result;
     } catch {
-        return [["#ERROR: Invalid JSON string"]];
+        const result = [["#ERROR: Invalid JSON string"]];
+        saveCallResult("PARSEJSON", result, jsonString);
+        return result;
     }
 }
 
 
 // =====================================================================================
-// Utility Functions (MAC-SAFE)
+// Utility Functions
 // =====================================================================================
 
 function formatDate(input: any): string {
@@ -249,6 +278,7 @@ function extractRatesFromPayload(
                 if (!isNaN(val) && val > 0) {
                     results.push([date, invert ? 1 / val : val]);
                 }
+                break;
             }
         }
     }
@@ -258,15 +288,15 @@ function extractRatesFromPayload(
 
 
 // =====================================================================================
-// Custom Function Association (MAC SAFE)
+// Custom Function Association
 // =====================================================================================
 
 Office.onReady(() => {
     if (typeof CustomFunctions !== "undefined") {
         try {
-            CustomFunctions.associate("TESTCONNECTION", TestConnection);
-            CustomFunctions.associate("FOREXRATE", ForexRate);
-            CustomFunctions.associate("PARSEJSON", ParseJSON);
+            CustomFunctions.associate("NRB.TESTCONNECTION", TestConnection);
+            CustomFunctions.associate("NRB.FOREXRATE", ForexRate);
+            CustomFunctions.associate("NRB.PARSEJSON", ParseJSON);
         } catch {}
     }
 });
