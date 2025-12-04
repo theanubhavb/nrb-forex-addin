@@ -132,7 +132,7 @@ export async function ForexRate(
 /**
  * Parse JSON string returned by ForexRate to Excel table
  * @customfunction
- * @volatile true
+ * @volatile false
  * @param {string} jsonString
  * @returns {any[][]}
  * @alias NRB.PARSEJSON
