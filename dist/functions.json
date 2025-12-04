@@ -2,7 +2,7 @@
     "allowCustomDataForDataTypeAny": true,
     "functions": [
         {
-            "description": "Test NRB API connection.",
+            "description": "Test NRB API Connection",
             "id": "TESTCONNECTION",
             "name": "TESTCONNECTION",
             "options": {
@@ -14,7 +14,7 @@
             }
         },
         {
-            "description": "Get NRB Forex rate (single date or range).",
+            "description": "Get NRB Forex Rate (single date or date range)",
             "id": "FOREXRATE",
             "name": "FOREXRATE",
             "options": {
@@ -44,7 +44,7 @@
             "result": {}
         },
         {
-            "description": "Parse JSON string returned by ForexRate to Excel table",
+            "description": "Convert NRB.FOREXRATE JSON string back to Excel table",
             "id": "PARSEJSON",
             "name": "PARSEJSON",
             "options": {
